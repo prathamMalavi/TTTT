@@ -1,0 +1,574 @@
+[#interactive-data-view-component]
+= Replace DataViewControlsComponent
+
+In OneCX v6, the InteractiveDataViewComponent replaces the following use cases:
+
+* Replace **p-dataView** and **DataViewControlsComponent** template with **InteractiveDataViewComponent**
+* Replace **p-table** and **DataViewControlsComponent** template with **InteractiveDataViewComponent**.
+
+== Code Changes
+
+* Remove `<ocx-data-view-controls>` and `DataViewControlsComponent` from `@onecx/portal-integration-angular`
+* Add `InteractiveDataViewComponent` from `@onecx/angular-accelerator`.
+* Replace the entire `<p-dataView>` or `<p-table>` with `<ocx-interactive-data-view>`
+* Remove `DataViewModule` from `primeng/dataview` if not used elsewhere
+* Add `<ocx-interactive-data-view>` and update input properties and output events as per tables below
+
+== Examples
+
+**Example: p-dataView & DataViewControlsComponent to InteractiveDataViewComponent**
+.Before
+[source, html]
+----
+<p-dataView [value]="items" [layout]="'grid'" [paginator]="true" [rows]="20">
+  <ng-template pTemplate="header">
+    <ocx-data-view-controls
+      [supportedViews]="['grid']"
+      [initialViewMode]="'grid'"
+      [filterValue]="filterValue"
+      [enableFiltering]="true"
+      (filterChange)="onFilterChange($event, dataView)"
+      [enableSorting]="false"
+    ></ocx-data-view-controls>
+  </ng-template>
+
+  <ng-template pTemplate="gridItem" let-item>
+    <div class="card">
+      <div>{{ item.name }}</div>
+    </div>
+  </ng-template>
+</p-dataView>
+----
+
+.After
+[source, html]
+----
+<ocx-interactive-data-view
+  [data]="items"
+  [supportedViewLayouts]="['grid']"
+  [layout]="'grid'"
+  [columns]="columns"
+  [filters]="filters"
+  [filter]="filterValue"
+  [clientSideFiltering]="true"
+  [emptyResultsMessage]="'ACTIONS.SEARCH.NO_DATA' | translate"
+  (filtered)="onFilterChange($event)"
+  (sorted)="onSortChange($event)"
+  (dataViewLayoutChange)="onDataViewChange($event)"
+>
+  <ng-template pTemplate="item" let-item>
+    <div class="card">
+      <div>{{ item.name }}</div>
+    </div>
+  </ng-template>
+</ocx-interactive-data-view>
+----
+
+**Example: p-table & DataViewControlsComponent to InteractiveDataViewComponent**
+
+.Before 
+[source, html]
+----
+<p-table [value]="items" [paginator]="true" [rows]="20">
+  <ng-template pTemplate="header">
+    <ocx-data-view-controls
+      [supportedViews]="['table']"
+      [initialViewMode]="'table'"
+      [filterValue]="filterValue"
+      [enableFiltering]="true"
+      (filterChange)="onFilterChange($event, table)"
+      [enableSorting]="true"
+    ></ocx-data-view-controls>
+  </ng-template>
+  <ng-template pTemplate="body" let-item>
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>{{ item.value }}</td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+        <td colspan="5">{{'ACTIONS.SEARCH.NO_DATA' | translate}}</td>
+    </tr>
+  </ng-template>
+</p-table>
+----
+
+.After 
+[source, html]
+----
+<ocx-interactive-data-view
+  [data]="items"
+  [supportedViewLayouts]="['table']"
+  [layout]="'table'"
+  [columns]="columns"
+  [filters]="filters"
+  [filter]="filterValue"
+  [clientSideFiltering]="true"
+  [clientSideSorting]="true"
+  [emptyResultsMessage]="'ACTIONS.SEARCH.NO_DATA' | translate"
+  (filtered)="onFilterChange($event)"
+  (sorted)="onSortChange($event)"
+  (dataViewLayoutChange)="onDataViewChange($event)"
+>
+  <ng-template pTemplate="item" let-item>
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>{{ item.value }}</td>
+    </tr>
+  </ng-template>
+</ocx-interactive-data-view>
+----
+
+== Properties Mapping
+
+.Input Properties (DataViewControlsComponent)
+[%collapsible]
+====
+[.stripes-even,cols="1,1,2"]
+|===
+h| DataViewControlsComponent
+h| InteractiveDataViewComponent
+h| Notes
+
+| supportedViews
+| supportedViewLayouts
+| Indicates available layouts. Example: `[supportedViewLayouts]="['list', 'grid', 'table']"`.
+
+| initialViewMode
+| layout
+| Sets initial layout. Example: `[layout]="'list'"`.
+
+| filterValue
+| filter
+| Filters to apply. Use the `value` key in each Filter object. Example: const filters: Filter[] = [
+  { columnId: 'category', filterType: FilterType.EQUALS, value: ['books', 'electronics'] }
+]
+
+| enableFiltering
+| clientSideFiltering
+| Enable client-side filtering. Example: `[clientSideFiltering]="true"`
+
+| enableSorting
+| clientSideSorting
+| Enable client-side sorting. Example: `[clientSideSorting]="true"`
+
+| sortingOptions
+| columns
+| Configure sorting per column by setting `sortable` on each `DataTableColumn`. Example:
+  const columns: DataTableColumn[] = [
+    { id: 'name', nameKey: 'OCX_DATA_TABLE.COLUMN.NAME', columnType: ColumnType.STRING, sortable: true }
+  ];
+
+| defaultSortOption
+| sortField
+| Use the column id for the default sort field. Example: `[sortField]="'name'"`
+
+| defaultSortDirection
+| sortDirection
+| Use the `DataSortDirection` enum to specify the sort direction. Example: `[sortDirection]=DataSortDirection.ASCENDING`
+
+| columnDefinitions
+| columns
+| Use `id` (instead of `field`) and `nameKey` for translated column names. Control visible columns with `displayedColumnKeys`. Example:
+  const columns: DataTableColumn[] = [
+    { id: 'name', nameKey: 'OCX_DATA_TABLE.COLUMN.NAME', columnType: ColumnType.STRING }
+  ];
+  displayedColumnKeys = ['name'];
+
+| columnTemplates
+| pTemplate with selectors
+| Use `p-template` with a selector. For more information, see the Template Transformation section.
+
+| dropdownPlaceholderText
+| -
+| Deprecated. Use translations (i18n); there is no direct input in the new component.
+
+| filterColumns
+| filters
+| Use `filters` with `clientSideFiltering`. In each filter object, provide `columnId` and `filterType`.
+
+| translations
+| -
+| Use i18n / translation keys.
+
+|===
+====
+
+.Input Properties (p-dataView)
+[%collapsible]
+====
+[.stripes-even,cols="1,1,2"]
+|===
+h| p-dataView
+h| InteractiveDataViewComponent
+h| Notes
+
+| value
+| data
+| Defines the component's data source. Example: `[data]="items"`
+
+| paginator
+| listGridPaginator, tablePaginator
+| listGridPaginator and tablePaginator are enabled by default
+
+| rows
+| pageSize
+| Number of items per page. Example: `[pageSize]="20"`.
+
+| rowsPerPageOptions
+| pageSizes
+| Array of page size options. Example: `[pageSizes]="[20, 60, 100]"`
+
+| alwaysShowPaginator
+| -
+| The paginator is shown listGridPaginator
+
+| showCurrentPageReport
+| -
+| The paginator shows the current page report by default when enabled.
+
+| currentPageReportTemplate
+| -
+| Use the `currentPageShowingKey` translation key to render content. The `currentPageReportTemplate` is shown when pagination is enabled. Default: `'OCX_DATA_TABLE.SHOWING'`.
+
+| filterBy
+| -
+| Use `clientSideFiltering` and specify `filterType` in the Filter object.
+
+| emptyMessage
+| emptyResultsMessage
+| Message displayed when no data is available.
+|===
+====
+
+.Input Properties (p-table)
+[%collapsible]
+====
+[.stripes-even,cols="1,1,2"]
+|===
+h| p-table
+h| InteractiveDataViewComponent
+h| Notes
+
+| value
+| data
+| Data source for the table. `[data]="items"`
+
+| columns
+| columns
+| Column definitions. Use `id` and `nameKey` for each column.
+
+| paginator
+| tablePaginator
+| Enable table pagination. `[tablePaginator]="true"` (enabled by default)
+
+| rows
+| pageSize
+| Number of items per page. `[pageSize]="20"`
+
+| rowsPerPageOptions
+| pageSizes
+| Array of page size options. `[pageSizes]="[20, 60, 100]"`
+
+|===
+====
+
+.Output Events
+[%collapsible]
+====
+[.stripes-even,cols="1,1,2"]
+|===
+h| DataViewControlsComponent
+h| InteractiveDataViewComponent
+h| Notes
+
+| sortChange, sortDirectionChange
+| sorted
+| Emits `{ sortColumn, sortDirection }`
+
+| filterChange
+| filtered
+| Emits Filter[]
+
+| dataViewChange
+| dataViewLayoutChange
+| Emits `'list'`, `'grid'`, or `'table'`
+
+| columnsChange
+| displayedColumnKeysChange
+| Emits string[] which contains the ids of the displayed columns
+|===
+====
+
+== Additional Notes
+
+=== Data Transformation (Required)
+[source, typescript]
+----
+// Required for ALL layouts (table, grid, list)
+public toInteractiveData(data: YourModel[]): RowListGridData[] {
+  return (data ?? []).map((item, index) => ({
+    ...item,
+    id: item.id ?? `item-${index}`,
+    imagePath: item.imageUrl ?? ''  // Required property
+  })) as RowListGridData[]
+}
+----
+
+=== Column Definition Mapping
+[source, typescript]
+----
+// Old: field + header + translationPrefix
+type OldColumn = { field: string; header: string; translationPrefix: string }
+
+// New: id + nameKey + columnType
+const columns: DataTableColumn[] = [
+  {
+    id: 'status',                      // was: field
+    nameKey: 'RESOURCE.STATUS',        // was: translationPrefix + '.' + header
+    columnType: ColumnType.STRING,     // NEW: STRING | DATE | NUMBER | TRANSLATION_KEY
+    sortable: true                     // Optional: enable sorting
+  }
+]
+----
+
+=== Template Patterns by Layout
+
+==== Table Layout
+[source, html]
+----
+<!-- Use type-based templates with @switch -->
+<ng-template pTemplate="stringTableCell" let-rowObject="rowObject" let-column="column">
+  @switch (column.id) {
+    @case ('status') { /* custom icon */ }
+    @default { {{ rowObject[column.id] }} }
+  }
+</ng-template>
+----
+
+==== Grid/List Layout
+[source, html]
+----
+<!-- Use item template -->
+<ng-template pTemplate="item" let-item let-i="index">
+  <div class="card">
+    <img [src]="item.imagePath" />
+    <h3>{{ item.title }}</h3>
+  </div>
+</ng-template>
+----
+
+=== Event Handler Signatures
+[source, typescript]
+----
+// Column visibility
+public onColumnsChange(columnKeys: string[]): void {
+  this.displayedColumnKeys = columnKeys
+}
+
+// Filtering (handled by component when clientSideFiltering=true)
+public onFilterChange(filters: Filter[]): void { }
+
+// Sorting
+public onSortChange(event: { sortColumn: string; sortDirection: DataSortDirection }): void {
+  this.sortField = event.sortColumn
+  this.sortDirection = event.sortDirection
+}
+
+// CRUD actions
+public onViewItem(item: RowListGridData): void { }
+public onEditItem(item: RowListGridData): void { }
+public onDeleteItem(item: RowListGridData): void { }
+----
+
+=== Additional Actions (Custom Buttons)
+[source, typescript]
+----
+public additionalDataActions: DataAction[] = [
+  {
+    id: 'copyItem',
+    icon: 'pi pi-copy',
+    labelKey: 'ACTIONS.COPY.LABEL',
+    permission: 'RESOURCE#EDIT',
+    callback: (item: RowListGridData) => this.onCopy(item)
+  }
+]
+----
+
+=== Property Mapping Quick Reference
+
+[.stripes-even,cols="2,2,3"]
+|===
+h| Old Pattern
+h| New Pattern
+h| Notes
+
+| `[value]="data"`
+| `[data]="toInteractiveData(data)"`
+| Data transformation required
+
+| `[columns]="filteredColumns"`
+| `[columns]="columns"` + `[displayedColumnKeys]="keys"`
+| Separate definitions from visibility
+
+| `(filterChange)="fn($event, table)"`
+| `(filtered)="fn($event)"`
+| Component handles filtering
+
+| `[paginator]="true"`
+| `[tablePaginator]="true"` or `[listGridPaginator]="true"`
+| Layout-specific
+
+| `[rows]="10"`
+| `[pageSize]="10"`
+| Renamed
+
+| `[rowsPerPageOptions]="[10,20]"`
+| `[pageSizes]="[10,20]"`
+| Renamed
+
+|===
+
+=== Type Migration Quick Reference
+
+[.stripes-even,cols="2,2,3"]
+|===
+h| Old
+h| New
+h| Import From
+
+| `field: string`
+| `id: string`
+| Column property
+
+| `header: string`
+| `nameKey: string`
+| Column property
+
+| -
+| `columnType: ColumnType`
+| `@onecx/angular-accelerator`
+
+| -
+| `RowListGridData`
+| `@onecx/angular-accelerator`
+
+| -
+| `DataAction`
+| `@onecx/angular-accelerator`
+
+| -
+| `DataSortDirection`
+| `@onecx/angular-accelerator`
+
+|===
+
+=== Common Issues & Quick Fixes
+
+[.stripes-even,cols="2,3"]
+|===
+h| Issue
+h| Solution
+
+| Type error: `YourModel[]` not assignable to `RowListGridData[]`
+| Add `toInteractiveData()` helper
+
+| Templates not rendering
+| Use `stringTableCell` with `@switch`, not column-specific templates
+
+| Event handler errors
+| Update signatures: `onFilterChange(filters: Filter[])`
+
+| Missing custom button
+| Add to `additionalDataActions: DataAction[]`
+
+| Columns not sortable
+| Add `sortable: true` to column definition
+
+| Column visibility not working
+| Bind `[displayedColumnKeys]` and handle `(displayedColumnKeysChange)`
+
+|===
+
+=== Template Transformation
+
+[%collapsible, title="For p-dataView"]
+====
+
+[.stripes-even,cols="1,1,2"]
+|===
+h| p-dataView
+h| InteractiveDataViewComponent
+h| Notes
+
+| `pTemplate="header"`
+| `pTemplate="topCenter"`
+| Keep header template for custom content. Remove only `ocx-data-view-controls` from inside it.
+
+| `pTemplate="gridItem"`
+| `pTemplate="item"`
+| Use `let-item let-i="index"` same applies for listItem
+|===
+
+.Before:
+
+[source, html]
+<ng-template let-roles pTemplate="gridItem">
+  <section>
+    <article *ngFor="let role of roles; index as i">
+      <a (click)="onEditRole($event, role)" [id]="'ws_roles_grid_data_row_' + i"> ... </a>
+    </article>
+  </section>
+</ng-template>
+
+.After:
+
+[source, html]
+<ng-template pTemplate="item" let-item let-i="index">
+  <section>
+    <article class="col-...">
+      <a (click)="onEditRole($event, item)" [id]="'ws_roles_grid_data_row_' + i"> ... </a>
+    </article>
+  </section>
+</ng-template>
+====
+
+
+[%collapsible, title="For p-table"]
+====
+[.stripes-even,cols="1,1,2"]
+|===
+h| p-table
+h| InteractiveDataViewComponent
+h| Notes
+
+| `pTemplate="header"`
+| `pTemplate="topCenter"`
+| Keep header template for custom content. Remove only `ocx-data-view-controls` from inside it.
+
+| `pTemplate="body"`
+| `pTemplate="item"`
+| Use `let-item` for row context in table layout
+|===
+
+.Before:
+
+[source, html]
+<ng-template pTemplate="body" let-item>
+  <tr>
+    <td>{{ item.name }}</td>
+    <td>{{ item.value }}</td>
+  </tr>
+</ng-template>
+
+.After:
+
+[source, html]
+<ng-template pTemplate="item" let-item>
+  <tr>
+    <td>{{ item.name }}</td>
+    <td>{{ item.value }}</td>
+  </tr>
+</ng-template>
+====
