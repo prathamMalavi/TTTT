@@ -1,0 +1,254 @@
+<ocx-portal-page
+  *ngIf="metaData$ | async as metaData"
+  permission="ANNOUNCEMENT#SEARCH"
+  helpArticleId="PAGE_ANNOUNCEMENT_SEARCH"
+>
+  <!-- declare slot to get data from product store -->
+  <ocx-slot
+    *ngIf="pdIsComponentDefined$ | async"
+    [name]="pdSlotName"
+    [inputs]="{ dataType: 'products', logEnabled: false, logPrefix: 'announcement' }"
+    [outputs]="{ products: pdSlotEmitter }"
+  >
+  </ocx-slot>
+  <!-- declare slot to get data from workspace -->
+  <ocx-slot
+    *ngIf="wdIsComponentDefined$ | async"
+    [name]="wdSlotName"
+    [inputs]="{ dataType: 'workspaces', logEnabled: false, logPrefix: 'announcement' }"
+    [outputs]="{ workspaces: wdSlotEmitter }"
+  >
+  </ocx-slot>
+  <app-announcement-criteria
+    [actions]="(actions$ | async) ?? []"
+    [usedProducts]="metaData.usedProducts ?? []"
+    [usedWorkspaces]="metaData.usedWorkspaces ?? []"
+    (searchEmitter)="onSearch($event)"
+    (resetSearchEmitter)="onCriteriaReset()"
+  ></app-announcement-criteria>
+
+  <ocx-content>
+    <p-message
+      *ngIf="loadingMetaData"
+      id="am_search_message_loading"
+      severity="info"
+      styleClass="m-3 p-2"
+      [text]="'ACTIONS.LOADING' | translate"
+    ></p-message>
+    <p-message
+      *ngIf="exceptionKey"
+      id="am_search_message_error"
+      severity="error"
+      styleClass="m-3 p-2"
+      [text]="exceptionKey | translate"
+    ></p-message>
+
+    <ng-container *ngIf="data$ | async as data">
+      <!-- placed here to avoid https://angular.dev/errors/NG0100 -->
+      <p-message
+        *ngIf="searching"
+        id="am_search_message_searching"
+        severity="info"
+        styleClass="m-3 p-2"
+        [text]="'ACTIONS.SEARCH.IN_PROGRESS' | translate"
+      ></p-message>
+      <ocx-interactive-data-view
+        *ngIf="!(searching || exceptionKey)"
+        id="am_search_table"
+        styleClass="mx-3 mb-2"
+        [data]="$any(data)"
+        [columns]="filteredColumns"
+        [supportedViewLayouts]="['table']"
+        [layout]="'table'"
+        [emptyResultsMessage]="'ACTIONS.SEARCH.NO_DATA' | translate"
+        [clientSideFiltering]="true"
+        [clientSideSorting]="true"
+        (filtered)="onFilterChange($event)"
+        (sorted)="onSortChange($event)"
+        (dataViewLayoutChange)="onDataViewChange($event)"
+        [paginator]="true"
+        [pageSizes]="[10, 30, 100]"
+        [pageSize]="10"
+        [currentPageShowingKey]="'{first} - {last} ' + ('ACTIONS.SEARCH.OF' | translate) + ' {totalRecords}'"
+        [viewPermission]="'ANNOUNCEMENT#VIEW'"
+        [editPermission]="'ANNOUNCEMENT#EDIT'"
+        [deletePermission]="'ANNOUNCEMENT#DELETE'"
+        (viewItem)="onDetail(undefined, $any($event), 'VIEW')"
+        (editItem)="onDetail(undefined, $any($event), 'EDIT')"
+        (deleteItem)="onDelete($any({}), $any($event))"
+      >
+        <!-- Custom cell templates for specific columns -->
+        <ng-template let-rowData pTemplate="typeIdTableCell">
+          <span
+            class="pi text-xl"
+            [class.pi-info-circle]="rowData['type'] === 'INFO'"
+            [class.pi-calendar]="rowData['type'] === 'EVENT'"
+            [class.pi-wrench]="rowData['type'] === 'SYSTEM_MAINTENANCE'"
+            [attr.aria-label]="'ENUMS.ANNOUNCEMENT_TYPE.' + rowData['type'] | translate"
+            [pTooltip]="'ENUMS.ANNOUNCEMENT_TYPE.' + rowData['type'] | translate"
+            tooltipPosition="top"
+            tooltipEvent="hover"
+          ></span>
+        </ng-template>
+
+        <ng-template let-rowData pTemplate="statusIdTableCell">
+          <span
+            class="pi"
+            [class.pi-circle-on]="rowData['status'] === 'ACTIVE'"
+            [class.pi-circle-off]="rowData['status'] === 'INACTIVE'"
+            [class.text-red-600]="rowData['priority'] === 'IMPORTANT'"
+            [class.text-yellow-600]="rowData['priority'] === 'NORMAL'"
+            [class.text-blue-600]="rowData['priority'] === 'LOW'"
+            [attr.aria-label]="'ENUMS.ANNOUNCEMENT_STATUS.' + rowData['status'] | translate"
+            [pTooltip]="
+              ('ENUMS.ANNOUNCEMENT_STATUS.' + rowData['status'] | translate) +
+              ' - ' +
+              ('ENUMS.ANNOUNCEMENT_PRIORITY.' + rowData['priority'] | translate)
+            "
+            tooltipPosition="top"
+            tooltipEvent="hover"
+          ></span>
+        </ng-template>
+
+        <ng-template let-rowData pTemplate="titleIdTableCell">
+          <div class="text-ellipsis-2-lines">{{ rowData['title'] }}</div>
+        </ng-template>
+
+        <ng-template let-rowData pTemplate="workspaceNameIdTableCell">
+          <ng-container *ngIf="!rowData.workspaceName"> {{ 'ANNOUNCEMENT.ALL' | translate }} </ng-container>
+          <div
+            *ngIf="rowData.workspaceName"
+            class="text-ellipsis-2-lines"
+            [pTooltip]="getDisplayName(rowData.workspaceName, metaData.allWorkspaces) ? '' : rowData.workspaceName"
+            tooltipPosition="top"
+            tooltipEvent="hover"
+          >
+            {{ getDisplayName(rowData.workspaceName, metaData.allWorkspaces) || ('ANNOUNCEMENT.NOT_FOUND' | translate) }}
+          </div>
+        </ng-template>
+
+        <ng-template let-rowData pTemplate="productNameIdTableCell">
+          <ng-container *ngIf="!rowData.productName"> {{ 'ANNOUNCEMENT.ALL' | translate }} </ng-container>
+          <div
+            *ngIf="rowData.productName"
+            class="text-ellipsis-2-lines"
+            [pTooltip]="getDisplayName(rowData.productName, metaData.allProducts) ? '' : rowData.productName"
+            tooltipPosition="top"
+            tooltipEvent="hover"
+          >
+            {{ getDisplayName(rowData.productName, metaData.allProducts) || ('ANNOUNCEMENT.NOT_FOUND' | translate) }}
+          </div>
+        </ng-template>
+
+        <ng-template let-rowData pTemplate="priorityIdTableCell">
+          {{ 'ENUMS.ANNOUNCEMENT_PRIORITY.' + rowData['priority'] | translate }}
+        </ng-template>
+      </ocx-interactive-data-view>
+
+      <!-- DELETE -->
+      <p-dialog
+        [header]="'DIALOG.DETAIL.DELETE.HEADER' | translate"
+        [(visible)]="displayDeleteDialog"
+        [modal]="true"
+        [closable]="true"
+        [draggable]="true"
+        [resizable]="false"
+        [dismissableMask]="true"
+        [style]="{ width: '550px' }"
+      >
+        <div *ngIf="item4Delete" class="flex column-gap-3 justify-content-start align-items-center">
+          <div class="pi pi-question-circle text-3xl danger-action-text" aria-hidden="true"></div>
+          <section class="w-11 flex flex-column row-gap-3 justify-content-start">
+            <div
+              id="am_delete_message_text"
+              class="mr-3 font-bold"
+              [attr.aria-label]="'ACTIONS.CONFIRMATION.QUESTION' | translate"
+              role="note"
+            >
+              {{ 'ACTIONS.DELETE.MESSAGE.TEXT' | translate }}
+            </div>
+            <div
+              id="am_delete_announcement_title"
+              class="px-5 text-center danger-action-text text-responsive"
+              [attr.aria-label]="'ANNOUNCEMENT.TITLE' | translate"
+              role="note"
+            >
+              {{ item4Delete.title }}
+            </div>
+
+            <div class="px-2 flex flex-column row-gap-1 justify-content-center" aria-hidden="true">
+              <div *ngIf="item4Delete.status === 'ACTIVE'" class="flex flex-row column-gap-3">
+                <div class="w-4 text-right font-bold">{{ 'ANNOUNCEMENT.STATUS' | translate }}</div>
+                <div class="w-7 text-left danger-action-text" id="am_delete_active">
+                  {{ 'ACTIONS.CONFIRMATION.YES' | translate }}
+                </div>
+              </div>
+              <div class="flex flex-row column-gap-3">
+                <div class="w-4 text-right font-bold">{{ 'ANNOUNCEMENT.TYPE' | translate }}</div>
+                <div class="w-7 text-left" id="am_delete_type">
+                  {{ 'ENUMS.ANNOUNCEMENT_TYPE.' + item4Delete.type | translate }}
+                </div>
+              </div>
+              <div class="flex flex-row column-gap-3">
+                <div class="w-4 text-right font-bold">{{ 'ANNOUNCEMENT.WORKSPACE' | translate }}</div>
+                <div class="w-7 text-left text-responsive" id="am_delete_workspace">
+                  <ng-container *ngIf="item4Delete.workspaceName">
+                    {{ getDisplayName(item4Delete.workspaceName, metaData.allWorkspaces) }}
+                  </ng-container>
+                  <ng-container *ngIf="!item4Delete.workspaceName"> {{ 'ANNOUNCEMENT.ALL' | translate }} </ng-container>
+                </div>
+              </div>
+              <div class="flex flex-row column-gap-3">
+                <div class="w-4 text-right font-bold">{{ 'ANNOUNCEMENT.PRODUCT_NAME' | translate }}</div>
+                <div class="w-7 text-left text-responsive" id="am_delete_product_name">
+                  <ng-container *ngIf="item4Delete.productName">
+                    {{ getDisplayName(item4Delete.productName, metaData.allProducts) }}
+                  </ng-container>
+                  <ng-container *ngIf="!item4Delete.productName"> {{ 'ANNOUNCEMENT.ALL' | translate }} </ng-container>
+                </div>
+              </div>
+            </div>
+
+            <div>{{ 'ACTIONS.DELETE.MESSAGE.INFO' | translate }}</div>
+          </section>
+        </div>
+        <ng-template pTemplate="footer">
+          <footer class="flex flex-wrap justify-content-end column-gap-2 row-gap-1">
+            <p-button
+              id="am_delete_action_no"
+              icon="pi pi-times"
+              pAutoFocus
+              [autofocus]="true"
+              (onClick)="displayDeleteDialog = false"
+              [label]="'ACTIONS.CONFIRMATION.NO' | translate"
+              [ariaLabel]="'ACTIONS.CONFIRMATION.NO.TOOLTIP' | translate"
+              [pTooltip]="'ACTIONS.CONFIRMATION.NO.TOOLTIP' | translate"
+              tooltipPosition="top"
+              tooltipEvent="hover"
+            ></p-button>
+            <p-button
+              id="am_delete_action_yes"
+              icon="pi pi-check"
+              (onClick)="onDeleteConfirmation(data)"
+              [label]="'ACTIONS.CONFIRMATION.YES' | translate"
+              [ariaLabel]="'ACTIONS.CONFIRMATION.YES.TOOLTIP' | translate"
+              [pTooltip]="'ACTIONS.CONFIRMATION.YES.TOOLTIP' | translate"
+              tooltipPosition="top"
+              tooltipEvent="hover"
+            ></p-button>
+          </footer>
+        </ng-template>
+      </p-dialog>
+    </ng-container>
+  </ocx-content>
+
+  <!-- DETAIL -->
+  <app-announcement-detail
+    [displayDialog]="displayDetailDialog"
+    (hideDialogAndChanged)="onCloseDetail($event)"
+    [announcement]="item4Detail"
+    [changeMode]="changeMode"
+    [allWorkspaces]="metaData.allWorkspaces"
+    [allProducts]="metaData.allProducts"
+  ></app-announcement-detail>
+</ocx-portal-page>
