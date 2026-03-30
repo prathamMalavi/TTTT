@@ -1,0 +1,145 @@
+<section class="mb-3">
+  <div class="flex flex-wrap align-items-center justify-content-between row-gap-2 mb-3">
+    <div>
+      <h2 class="m-0">{{ 'DIALOG.SEARCH.HEADER' | translate }}</h2>
+      <small>{{ 'DIALOG.SEARCH.SUBHEADER' | translate }}</small>
+    </div>
+    <div class="flex column-gap-2">
+      <button type="button" class="p-button p-component" (click)="onResetCriteria()">
+        <span class="p-button-label">{{ 'ACTIONS.RESET' | translate }}</span>
+      </button>
+      <button type="button" class="p-button p-component" (click)="onSearch()">
+        <span class="p-button-label">{{ 'ACTIONS.SEARCH.LABEL' | translate }}</span>
+      </button>
+    </div>
+  </div>
+  <form [formGroup]="criteriaForm" class="flex flex-wrap gap-3">
+    <span class="p-float-label">
+      <input
+        id="am_search_criteria_title"
+        pInputText
+        type="text"
+        formControlName="title"
+        class="w-9rem sm:w-13rem"
+        [ariaLabel]="
+          ('ANNOUNCEMENT.TOOLTIPS.TITLE.CRITERIA' | translate) + ('ACTIONS.SEARCH.WILDCARD_SUPPORT' | translate)
+        "
+        [pTooltip]="
+          ('ANNOUNCEMENT.TOOLTIPS.TITLE.CRITERIA' | translate) + ('ACTIONS.SEARCH.WILDCARD_SUPPORT' | translate)
+        "
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      />
+      <label for="am_search_criteria_title" aria-hidden="true">{{ 'ANNOUNCEMENT.TITLE' | translate }}</label>
+    </span>
+    <span class="p-float-label">
+      <p-datepicker
+        inputId="am_search_criteria_start_date_range"
+        styleClass="w-13rem"
+        selectionMode="range"
+        [readonlyInput]="true"
+        formControlName="startDateRange"
+        appendTo="body"
+        [showButtonBar]="true"
+        [showWeek]="true"
+        [dateFormat]="dateFormatForRange"
+        [ariaLabel]="'ANNOUNCEMENT.TOOLTIPS.START_DATE_RANGE' | translate"
+        [pTooltip]="'ANNOUNCEMENT.TOOLTIPS.START_DATE_RANGE' | translate"
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      ></p-datepicker>
+      <label for="am_search_criteria_start_date_range" aria-hidden="true">
+        {{ 'ANNOUNCEMENT.START_DATE_RANGE' | translate }}
+      </label>
+    </span>
+    <span class="p-float-label">
+      <p-select
+        id="am_search_criteria_workspace_name"
+        styleClass="w-11rem sm:w-13rem"
+        panelStyleClass="w-13rem"
+        formControlName="workspaceName"
+        [options]="usedWorkspaces"
+        [showClear]="true"
+        [autoDisplayFirst]="true"
+        [appendTo]="'body'"
+        [emptyMessage]="'ACTIONS.SEARCH.NO_DATA' | translate"
+        [ariaLabel]="'ANNOUNCEMENT.TOOLTIPS.WORKSPACE' | translate"
+        [pTooltip]="'ANNOUNCEMENT.TOOLTIPS.WORKSPACE' | translate"
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      >
+      </p-select>
+      <label for="am_search_criteria_workspace_name" aria-hidden="true">
+        {{ 'ANNOUNCEMENT.WORKSPACE' | translate }}
+      </label>
+    </span>
+    <span class="p-float-label">
+      <p-select
+        id="am_search_criteria_product_name"
+        styleClass="w-11rem sm:w-13rem"
+        panelStyleClass="w-13rem"
+        formControlName="productName"
+        [options]="usedProducts"
+        [showClear]="true"
+        [autoDisplayFirst]="true"
+        [appendTo]="'body'"
+        [emptyMessage]="'ACTIONS.SEARCH.NO_DATA' | translate"
+        [ariaLabel]="'ANNOUNCEMENT.TOOLTIPS.PRODUCT_NAME' | translate"
+        [pTooltip]="'ANNOUNCEMENT.TOOLTIPS.PRODUCT_NAME' | translate"
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      >
+      </p-select>
+      <label for="am_search_criteria_product_name" aria-hidden="true">
+        {{ 'ANNOUNCEMENT.PRODUCT_NAME' | translate }}
+      </label>
+    </span>
+    <span class="p-float-label">
+      <p-multiSelect
+        id="am_search_criteria_status"
+        formControlName="status"
+        appendTo="body"
+        [options]="(statusOptions$ | async) ?? []"
+        [filter]="false"
+        [ariaLabel]="'ANNOUNCEMENT.TOOLTIPS.STATUS' | translate"
+        [pTooltip]="'ANNOUNCEMENT.TOOLTIPS.STATUS' | translate"
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      >
+      </p-multiSelect>
+      <label for="am_search_criteria_status" aria-hidden="true">{{ 'ANNOUNCEMENT.STATUS' | translate }}</label>
+    </span>
+
+    <span class="p-float-label">
+      <p-multiSelect
+        id="am_search_criteria_type"
+        formControlName="type"
+        appendTo="body"
+        [options]="(type$ | async) ?? []"
+        [filter]="false"
+        [ariaLabel]="'ANNOUNCEMENT.TOOLTIPS.TYPE' | translate"
+        [pTooltip]="'ANNOUNCEMENT.TOOLTIPS.TYPE' | translate"
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      >
+      </p-multiSelect>
+      <label for="am_search_criteria_type" aria-hidden="true">{{ 'ANNOUNCEMENT.TYPE' | translate }}</label>
+    </span>
+
+    <span class="p-float-label">
+      <p-multiSelect
+        id="am_search_criteria_priority"
+        [options]="(priorityType$ | async) ?? []"
+        formControlName="priority"
+        appendTo="body"
+        [filter]="false"
+        [ariaLabel]="'ANNOUNCEMENT.TOOLTIPS.PRIORITY' | translate"
+        [pTooltip]="'ANNOUNCEMENT.TOOLTIPS.PRIORITY' | translate"
+        tooltipPosition="top"
+        tooltipEvent="hover"
+      >
+      </p-multiSelect>
+      <label for="am_search_criteria_priority" aria-hidden="true">{{ 'ANNOUNCEMENT.PRIORITY' | translate }}</label>
+    </span>
+  </form>
+</section>
