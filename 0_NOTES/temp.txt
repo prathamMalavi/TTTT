@@ -1,0 +1,116 @@
+Scan @workspace
+explain slots in onecx
+please explain complete detail from start to end control flow
+
+with all necessary code snippets (each that comes aross in the flow) with console log and explanation
+
+also tell end to end high level of detailed example covering all concept with a complex example
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+Scan @workspace
+scan the shell, libs and mfe
+
+and explain me the how translation is setup in onecx
+how translation works
+
+i need complete
+code explanation of all related files
+examples of how the code works and control flow
+behind the scene console logs of each imp function and transformation
+
+i need a complex example explanation of the translation working
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+Scan @workspace
+Explain what is thi repo onecx-local-env and what it is about explain in the most detailed way possible how each mfe ui bff svc loads and connects how data is loaded what are all this folders and files what purpose
+do they serve
+
+please explain things in easiest way possible i am naive and also provide example for each explanations
+and the explanation larger context and impact
+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+I am complete naive to all topics be in angular packages npm
+explanmation should have both technical and non-technical details to make it easy for everyone to understand.
+also examples should be provided to illustrate the concepts and workflows explained.
+Links to relevant code and documentation should be included to help users and developers navigate the repo effectively.
+Its okay if this takes even an hour i need a well detailed md doc
+Its okay even if it is 30,0000+ lines long, I want it to be comprehensive and cover every aspect of the repo in detail.
+The doc should be such that after reading i will be able to understand the repo completely and be able to contribute to it effectively for any change
+Context this is v6 branch
+there are v5 -> angular 18 application and v6 -> angular 19 application and main as of now angular 19 (but in furture will be for angular 20 and above)
+The doc should be such indepth that it help be understand and make indepentend so i can make any changes required test them on my own (even if creating future vesion changes to past version including new features anything)
+
+Task:
+i need you to Explain every single bit of this repo
+Each folder and file in detailed way what are they why are they their purpose of existence
+What type of folder struture is this
+is this an application or a library or a monorepo? and how many independent projects are there in this repo and what are they purpose and explanation of each
+with examples and for whom user developer or repo developer
+
+Then explain the workflow of this repo and how to use it and how to contribute to it
+with examples and for whom user developer or repo developer
+
+the architecture
+Control flow
+Behind the scnenes (control flow , Work flow)
+Explanation of each file and folder in detailed way with examples and for whom user developer or repo developer
+User side work flow and control flow and connect to our repo/ atrchitecture / control flow
+How this repo is published and where and that workflow and control flow behind the scenes of that
+Command to run(all you find example : build test (suite/single) and many more )
+
+ALso what all does happen when we run like flow
+bash:WRKING DIR=./tnv npm run test
+it created ./tmp/nx-plugin-out/test-project ?how
+what all did it do? did it test all feats ? if yes what are they all
+
+Also check this links and also query @about_onecx to find more
+https://onecx.github.io/docs/documentation/current/onecx-nx-plugins/index.html
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+Doc 1
+SO i need you provide me all details about authentication, Auth management and tokens in Keycloak in Onecx using the onecx-portal-ui-libs and onecx-shell-ui for both shell and onecx apps(can use any one for reference)
+I need the complete workflow achitecture and control flow explanations
+I need proper techincal and nontechnical explanation about complete auth management in Onecx also the required explanation for this task
+Make Sure you add examples and use cases to explain the concepts better. Also add refferences with code snippets to make it more clear.
+
+Remeber I need proper techincal and nontechnical explanation about complete auth management in Onecx also the required explanation for this task also i am naive but i need technical side as well
+It is okay even if the doc is 10,000+ lines long
+
+If any task comes related to auth or any topic related i should be able to do that
+
+also start with a table mentioning all auth management files in shell and libs and their explanation
+
+
+also you showed How? - Step-by-step Flow
+but where is the libs involved in thid flow
+
+You did not explain 
+High-Level Architecture just diagram 
+
+
+
+
+
+
+Current story 
+
+
+I Have this inputs

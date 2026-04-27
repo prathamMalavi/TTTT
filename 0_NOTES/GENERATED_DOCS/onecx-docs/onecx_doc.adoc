@@ -1,0 +1,703 @@
+= OneCX Documentation Guide and Structure
+:lang: en
+:sectnums:
+:toc:
+:toclevels: 4
+:imagesdir: ./images
+:idprefix:
+:idseparator: -
+
+This guide consolidates how documentation is written across the OneCX ecosystem using Antora and AsciiDoc. It captures conventions from existing repositories under `docs`, `userdocs`, and various product modules, and distills them into practical instructions, formatting styles, and usage examples. It also explains the OneCX documentation structure and how to integrate new repositories so they appear in the central documentation site.
+
+== Audience
+
+This guide is for contributors who create and maintain documentation for any OneCX repository (services, BFFs, UIs, operators, guides, and special modules).
+
+== Goals
+
+- Ensure consistent documentation across all OneCX repositories.
+- Provide ready-to-use templates and patterns.
+- Explain Antora-based structure and integration.
+- Offer examples for common scenarios (navigation, includes, references, code blocks, attributes, images, UI and service docs).
+
+== Key Technologies
+
+- Antora (site generation and component packaging)
+- AsciiDoc / Asciidoctor (content authoring)
+- GitHub Actions (CI integration for docs publishing)
+
+== Core Principles
+
+- Prefer modular documentation: group related topics under `modules/<module>/pages/<chapter>/...`.
+- Always provide `antora.yml` at the repository `docs/` root with `name: documentation` and `version: latest`.
+- Declare navigation via `modules/<module>/nav.adoc` (or `partials/nav.adoc` depending on repository conventions).
+- Use AsciiDoc attributes for reusable metadata and links (e.g., `:imagesdir:`, product registries, file locations).
+- Use `xref` macros for internal and cross-repository references.
+- Keep titles, labels, and IDs consistent and human-readable.
+- Use includes to compose index pages from attribute files and sub-pages.
+
+== OneCX Docs Structure Overview
+
+The central OneCX documentation site is an Antora project. The core files live in the `docs` repository of the monorepo and aggregate content from many source repositories.
+
+=== Root Antora Component
+
+- File: docs/antora.yml
+- Purpose: Declares the OneCX root component used as the documentation landing and index.
+- Sample content (from the repo):
+
+[source,yaml]
+----
+name: documentation
+title: OneCX
+version: latest
+nav:
+  - modules/ROOT/nav.adoc
+asciidoc:
+  attributes:
+    company-name: OneCX Community
+    product: OneCX Platform
+    product-version: latest
+    doc-type: Documentation
+    doc-title: OneCX Platform Compendium
+    doc-subtitle: Comprehensive guides and reference materials for OneCX Platform
+    toclevels: 2
+    tabsize: 2
+    table-stripes: even
+    icons: font
+    source-highlighter: highlight.js
+    highlightjs-theme: github
+----
+
+Notes:
+- The root module `ROOT` contains top-level navigation which includes partial nav files from other modules.
+
+=== Site Playbook
+
+- File: docs/antora-playbook.yml
+- Purpose: Defines the site sources, UI bundle, Asciidoc attributes, and Antora extensions.
+- Highlights:
+  - `content.sources`: Points Antora to dozens of OneCX repositories under their `docs/` folders.
+  - UI bundle fetched from `docs-antora-ui` releases.
+  - Asciidoc attributes such as `sourcemap` and `kroki-fetch-diagram`.
+  - Antora extensions like `@antora/lunr-extension` for search.
+
+Example excerpt:
+
+[source,yaml]
+----
+site:
+  title: OneCX
+  url: https://onecx.github.io/docs/
+  start_page: documentation::index.adoc
+content:
+  sources:
+    - url: .
+      branches: HEAD
+      start_paths:
+        - docs
+        - .
+    - url: https://github.com/onecx/docs-guides-ui.git
+      branches: [HEAD]
+      start_path: docs
+    # ... many more repositories
+ui:
+  bundle:
+    url: https://github.com/onecx/docs-antora-ui/releases/latest/download/ui-bundle.zip
+    snapshot: true
+  supplemental_files:
+    - path: ui.yml
+      contents: |
+        static_files:
+        - .nojekyll
+    - path: .nojekyll
+urls:
+  latest_version_segment: current
+asciidoc:
+  attributes:
+    sourcemap: true
+    kroki-fetch-diagram: true
+  extensions:
+    - ./extensions/bpmn-js.js
+    - asciidoctor-kroki
+antora:
+  extensions:
+    - require: "@cerbos/antora-llm-generator"
+    - "@antora/lunr-extension"
+----
+
+=== Root Navigation
+
+- File: docs/modules/ROOT/nav.adoc
+- Purpose: Composes site-wide nav by including nav partials from modules pulled by playbook.
+- Example:
+
+[source,asciidoc]
+----
+include::documentation:onecx-docs-overview:partial$nav.adoc[]
+include::documentation:onecx-docs-start:partial$nav.adoc[]
+include::documentation:onecx-docs-dev:partial$nav.adoc[]
+include::documentation:onecx-docs-apps:partial$nav.adoc[]
+----
+
+== Repository-level Documentation Structure
+
+Every repository that contributes documentation follows a consistent layout inside `docs/`.
+
+=== Required Files and Folders
+
+- `docs/antora.yml`
+- `docs/modules/<module>/pages/` (actual content)
+- `docs/modules/<module>/nav.adoc` or `docs/modules/<module>/partials/nav.adoc`
+- Optional: `docs/modules/<module>/pages/<attributes-file>.adoc` with reusable attributes
+
+Example from service repos:
+
+[source,tree]
+----
+docs
+├── antora.yml
+└── modules
+    └── onecx-bookmark-svc
+        ├── pages
+        │   ├── index.adoc
+        │   ├── onecx-bookmark-svc.adoc
+        │   ├── onecx-bookmark-svc-docs.adoc
+        │   └── onecx-bookmark-svc-attributes.adoc
+        └── partials
+            └── nav.adoc
+----
+
+=== `antora.yml` Guidelines
+
+- Use the OneCX root component name: `documentation`
+- Use version: `latest`
+- Do not add extra properties that might conflict with the main site configuration
+
+Example (from multiple repos):
+
+[source,yaml]
+----
+name: documentation
+version: latest
+----
+
+=== Module Naming Convention
+
+- Use a module name that mirrors the repository, often with suffixes: `-svc`, `-bff`, `-ui`, `-operator`
+- Examples: `onecx-bookmark-svc`, `onecx-welcome-ui`, `onecx-permission-operator`
+
+=== Navigation File: `nav.adoc`
+
+Purpose:
+- Declares the left-hand menu entries and links to pages.
+- May be placed under `partials/` or directly under `modules/<module>/` depending on repository.
+
+Common pattern:
+
+[source,asciidoc]
+----
+** xref:documentation:onecx-bookmark-svc:index.adoc[Backend Service]
+----
+
+Notes:
+- The `xref:documentation:...` pattern references the `documentation` component name set in `antora.yml`.
+- Use human-readable labels inside square brackets.
+- Keep a consistent hierarchy with `*`, `**`, `***` for section depth.
+
+=== Pages: `index.adoc` and Includes
+
+Patterns observed:
+
+[source,asciidoc]
+----
+include::onecx-bookmark-svc-attributes.adoc[opts=optional]
+
+= OneCX Bookmark Backend Service
+
+== Configuration
+include::onecx-bookmark-svc.adoc[opts=optional]
+
+include::onecx-bookmark-svc-docs.adoc[opts=optional]
+----
+
+Guidelines:
+- Create an attribute file (e.g., `<repo>-attributes.adoc`) for reusable URLs or paths.
+- Use `include::...[]` to compose the `index.adoc` from smaller topic files.
+- Prefer logical sections with `==`, `===` for readability.
+
+== AsciiDoc Conventions
+
+=== IDs and Anchors
+
+- Consider setting:
+
+[source,asciidoc]
+----
+:idprefix:
+:idseparator: -
+----
+
+- This ensures stable anchors and avoids collisions.
+
+=== Images Directory
+
+- Set images directory at the top of each document (recommended):
+
+[source,asciidoc]
+----
+:imagesdir: ../images
+----
+
+- This is a documented good practice in OneCX docs: see `docs-guides-documentation` partial `good-practice.adoc`.
+
+=== Cross-References (`xref`)
+
+- Use AsciiDoc `xref` macro for internal references:
+
+[source,asciidoc]
+----
+See xref:setup/repository.adoc[Integrating new repository]
+----
+
+- For cross-repo references, rely on Antora resource IDs as configured by `antora.yml` and the playbook. See the `docs-guides-documentation` `guides/reference.adoc` for details.
+
+Example:
+
+[source,asciidoc]
+----
+** xref:documentation:onecx-welcome-ui:index.adoc[Welcome UI]
+----
+
+=== Admonitions
+
+- Use `[NOTE]`, `[TIP]`, `[WARNING]`, `[IMPORTANT]` blocks as needed:
+
+[source,asciidoc]
+----
+[NOTE]
+====
+Remember to set `:imagesdir:` on every page.
+====
+----
+
+=== Code Blocks
+
+- Declare language to enable highlighting per site config:
+
+[source]
+----
+[source,yaml]
+----
+name: documentation
+version: latest
+----
+----
+
+- For commands:
+
+[source,shell]
+----
+# build docs locally (example)
+antora --stacktrace antora-playbook.yml
+----
+
+=== Collapsible Sections
+
+- Use `%collapsible` when presenting long examples:
+
+[source,asciidoc]
+----
+.Example
+[%collapsible]
+====
+... long content ...
+====
+----
+
+=== Tables and Lists
+
+- Keep tables narrow and lists concise.
+- Prefer bullets with short lines.
+
+== Images and Assets
+
+- Place images under `modules/<module>/images/`.
+- Reference via `image::` macros:
+
+[source,asciidoc]
+----
+image::architecture.png[Architecture diagram]
+----
+
+- Ensure `:imagesdir:` points to the correct relative path for readers.
+
+== CI Integration for Docs Publishing
+
+To update the central site automatically on changes, repositories include a GitHub workflow dispatching an event to the main docs project.
+
+Example (from `docs-guides-documentation` setup guide):
+
+[source,yaml]
+----
+name: CI
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger website update
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.CI_PAT }}
+          repository: onecx/docs
+          event-type: dispatch-build-website
+----
+
+== Integrating a New Repository
+
+Refer to `docs-guides-documentation` `setup/repository.adoc` for canonical steps. Summary:
+
+1. Create `docs/` with structure:
+
+[source]
+----
+.github
+└─ workflows
+   └─ main.yml
+
+docs
+└─ antora.yml
+└─ modules
+   └─ <repo-suffix>
+      ├─ nav.adoc (or partials/nav.adoc)
+      └─ pages
+         └─ <chapters>/...
+----
+
+2. In `docs/antora.yml`, set:
+
+[source,yaml]
+----
+name: documentation
+version: latest
+----
+
+3. Create `nav.adoc` menu entries and a composed `index.adoc` using `include::`.
+4. Add GitHub Actions workflow to dispatch central site update.
+5. Register the repository in the central site (playbook sources) and ensure your nav is included via root nav includes.
+
+== Module Types and Suggested Content
+
+=== Service (`-svc`)
+
+- `index.adoc` with overview, configuration, and technical docs includes.
+- Attributes file with registry URLs and key file paths:
+
+[source,asciidoc]
+----
+:docker-registry: https://github.com/onecx/<repo>/pkgs/container/<repo>
+:helm-registry: https://github.com/onecx/<repo>/pkgs/container/charts%2F<repo>
+:properties-file: src/main/resources/application.properties
+:helm-file: src/main/helm/values.yaml
+----
+
+- Typical sections: Configuration, Extensions, Endpoints, Deployment.
+
+=== BFF (`-bff`)
+
+- Overview of BFF responsibilities.
+- API aggregation notes and references to UI and service modules.
+- Testing strategy and mock endpoints.
+
+=== UI (`-ui`)
+
+- User-facing features overview.
+- Setup instructions (e.g., Angular or React) linking to `docs-guides-ui`.
+- Troubleshooting section for common build/run issues.
+
+=== Operator (`-operator`)
+
+- CRDs, reconciliation loops, and Kubernetes integration docs.
+- Configuration via Helm or YAML.
+
+== Writing Style Guidelines
+
+- Use clear, direct sentences.
+- Prefer active voice and present tense.
+- Keep headings descriptive and short.
+- Use consistent capitalization: PascalCase for object names, camelCase for tags and operation IDs (per `api_guidelines.adoc`).
+- Avoid quotes in tags and descriptions unless necessary.
+- Introduce acronyms before using them.
+
+== Referencing and Linking
+
+- Internal xrefs:
+
+[source,asciidoc]
+----
+xref:guides/reference.adoc[Referencing]
+----
+
+- Cross-component xrefs:
+
+[source,asciidoc]
+----
+** xref:documentation:onecx-help-svc:index.adoc[Help Service]
+----
+
+- External links:
+
+[source,asciidoc]
+----
+https://docs.antora.org/antora/latest/page/xref/[Antora xrefs]
+----
+
+== Common Page Template
+
+Use this template when starting a new page:
+
+[source,asciidoc]
+----
+:imagesdir: ../images
+:idprefix:
+:idseparator: -
+
+= <Page Title>
+
+Brief page introduction (1-3 sentences).
+
+== Purpose
+Explain why this page exists and what it covers.
+
+== Prerequisites
+List tools, versions, and knowledge required.
+
+== Steps
+* Step 1: ...
+* Step 2: ...
+
+== References
+* xref:setup/repository.adoc[Repository Integration]
+* https://onecx.github.io/docs/[OneCX Docs]
+----
+
+== Example Navigation Patterns
+
+=== Single Page Module
+
+[source,asciidoc]
+----
+* Service
+** xref:documentation:onecx-example-svc:index.adoc[Overview]
+----
+
+=== Multi-chapter Module
+
+[source,asciidoc]
+----
+* UI
+** Getting Started
+*** xref:getting-started/index.adoc[]
+** Guides
+*** xref:guides/setup.adoc[]
+*** xref:guides/troubleshooting.adoc[]
+----
+
+== Index Page Composition Examples
+
+=== Attributes + Includes
+
+[source,asciidoc]
+----
+include::my-module-attributes.adoc[opts=optional]
+
+= My Module
+
+== Overview
+include::overview.adoc[]
+
+== Setup
+include::setup.adoc[]
+----
+
+=== With Collapsible Examples
+
+[source,asciidoc]
+----
+= My Module Examples
+
+.Example: Basic Config
+[%collapsible]
+====
+[source,properties]
+----
+quarkus.http.port=8080
+----
+====
+----
+
+== Kroki Diagrams
+
+If the site enables Kroki (`kroki-fetch-diagram: true`), you can embed diagrams:
+
+[source,asciidoc]
+----
+[plantuml]
+----
+@startuml
+Alice -> Bob: Hello
+@enduml
+----
+----
+
+== Troubleshooting Docs
+
+- Ensure your module name matches references used in `xref` entries.
+- If images don't render, check `:imagesdir:` and file paths.
+- If nav does not display, confirm nav file location (partials vs direct) and inclusion in site root nav.
+
+== Validation Checklist
+
+- [ ] `docs/antora.yml` exists and uses `name: documentation`, `version: latest`.
+- [ ] `docs/modules/<module>/nav.adoc` or `partials/nav.adoc` created.
+- [ ] `docs/modules/<module>/pages/index.adoc` composed via includes.
+- [ ] `:imagesdir:` set in each page.
+- [ ] Internal links use `xref`.
+- [ ] CI workflow dispatches central site build.
+
+== Extended Examples Catalog
+
+Below are additional patterns you can copy and adapt.
+
+=== Service Attributes Files
+
+[source,asciidoc]
+----
+:docker-registry: https://github.com/onecx/onecx-service/pkgs/container/onecx-service
+:helm-registry: https://github.com/onecx/onecx-service/pkgs/container/charts%2Fonecx-service
+:properties-file: src/main/resources/application.properties
+:helm-file: src/main/helm/values.yaml
+----
+
+=== UI Quick Links Page
+
+[source,asciidoc]
+----
+:idprefix:
+:idseparator: -
+= Angular Resources
+* https://angular.io/[Angular Homepage]
+* https://ngrx.io/[NgRx]
+* https://storybook.js.org/[Storybook]
+----
+
+=== Contribution Landing Page
+
+[source,asciidoc]
+----
+= General
+:idprefix:
+:idseparator: -
+
+== Collection for New Team Members
+* xref:faq.adoc[Frequently Asked Questions]
+* xref:topics/general.adoc[General]
+----
+
+=== Referencing Guide
+
+[source,asciidoc]
+----
+= Referencing
+This chapter gives guidance on AsciiDoc xref macro usage.
+See https://docs.asciidoctor.org/asciidoc/latest/macros/xref/[*xref macro*].
+----
+
+== API Guidelines Snapshot
+
+From `docs-guides` `api_guidelines.adoc`:
+- Use camelCase for tags and `operationId`.
+- PascalCase for object names.
+- Order endpoints: GET, POST, PUT, PATCH, DELETE.
+- Use `ProblemDetailResponse` for `400` errors; do not include `401`, `403`, `500` in OpenAPI files.
+
+== Templates
+
+=== `antora.yml`
+
+[source,yaml]
+----
+name: documentation
+version: latest
+----
+
+=== `nav.adoc`
+
+[source,asciidoc]
+----
+* Service
+** xref:documentation:my-service:index.adoc[Overview]
+----
+
+=== `index.adoc`
+
+[source,asciidoc]
+----
+include::my-service-attributes.adoc[opts=optional]
+
+= My Service
+
+== Overview
+include::overview.adoc[]
+
+== Configuration
+include::configuration.adoc[]
+----
+
+== Appendix: Frequently Used Macros
+
+- `xref:` internal and cross-repo links
+- `include::` page composition
+- `image::` asset embedding
+- `[NOTE]`, `[TIP]`, `[WARNING]` admonitions
+- `[source,lang]` code blocks
+
+== Appendix: Common Pitfalls
+
+- Missing or incorrect module name causing broken xrefs.
+- Nav file not included in root nav, leading to hidden content.
+- Not setting `:imagesdir:`, resulting in broken image paths.
+- Using quotes in tags or descriptions in OpenAPI files unnecessarily.
+
+== How to Preview Locally
+
+Install Antora and preview (if you have the environment):
+
+[source,shell]
+----
+# Install Antora CLI and site generator
+npm i -g @antora/cli @antora/site-generator
+
+# Run Antora with the playbook
+antora --stacktrace docs/antora-playbook.yml
+----
+
+If you are working in a single repository, you can also point Antora to just that `docs/` directory for a minimal preview, but ensure your sources resolve.
+
+== Updating Central Docs
+
+- Ensure your repository is listed in `content.sources` of the central playbook.
+- Verify your nav is included by the root nav (`docs/modules/ROOT/nav.adoc`).
+- Use GitHub Actions to dispatch updates automatically on push to `main`.
+
+== Final Notes
+
+- Follow consistent naming conventions and structure for modules and pages.
+- Keep content concise but complete; use collapsible blocks for long examples.
+- Reuse attributes and includes to avoid duplication.
+- Align with OneCX guides and contribution docs where relevant.
+
